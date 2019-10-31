@@ -430,21 +430,34 @@ func (p *Provisioner) escapeEnvVars() ([]string, map[string]string) {
 func (p *Provisioner) createEnvVarFileContent() string {
 	keys, envVars := p.escapeEnvVars()
 
-	flattened := ""
 	// Re-assemble vars surrounding value with single quotes and flatten
+	envVarFormat := "%s='%s'"
+	if p.config.EnvVarFormat != "" {
+		envVarFormat = p.config.EnvVarFormat
+	}
+	line := fmt.Sprintf("export %s\n", envVarFormat)
+
+	var flattened string
 	for _, key := range keys {
-		flattened += fmt.Sprintf("export %s='%s'\n", key, envVars[key])
+		flattened += fmt.Sprintf(line, key, envVars[key])
 	}
 
 	return flattened
 }
 
-func (p *Provisioner) createFlattenedEnvVars() (flattened string) {
+func (p *Provisioner) createFlattenedEnvVars() string {
 	keys, envVars := p.escapeEnvVars()
 
 	// Re-assemble vars surrounding value with single quotes and flatten
-	for _, key := range keys {
-		flattened += fmt.Sprintf("%s='%s' ", key, envVars[key])
+	envVarFormat := "%s='%s'"
+	if p.config.EnvVarFormat != "" {
+		envVarFormat = p.config.EnvVarFormat
 	}
-	return
+	s := fmt.Sprintf("%s ", envVarFormat)
+
+	var flattened string
+	for _, key := range keys {
+		flattened += fmt.Sprintf(s, key, envVars[key])
+	}
+	return flattened
 }
