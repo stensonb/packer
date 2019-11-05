@@ -57,9 +57,10 @@ type Config struct {
 
 	ExpectDisconnect bool `mapstructure:"expect_disconnect"`
 
-	ctx interpolate.Context
 	// name of the tmp environment variable file, if UseEnvVarFile is true
 	envVarFile string
+
+	ctx interpolate.Context
 }
 
 type Provisioner struct {
@@ -82,8 +83,13 @@ func (p *Provisioner) Prepare(raws ...interface{}) error {
 			},
 		},
 	}, raws...)
+
 	if err != nil {
 		return err
+	}
+
+	if p.config.EnvVarFormat == "" {
+		p.config.EnvVarFormat = "%s='%s'"
 	}
 
 	if p.config.ExecuteCommand == "" {
@@ -430,14 +436,8 @@ func (p *Provisioner) escapeEnvVars() ([]string, map[string]string) {
 func (p *Provisioner) createEnvVarFileContent() string {
 	keys, envVars := p.escapeEnvVars()
 
-	// Re-assemble vars surrounding value with single quotes and flatten
-	envVarFormat := "%s='%s'"
-	if p.config.EnvVarFormat != "" {
-		envVarFormat = p.config.EnvVarFormat
-	}
-	line := fmt.Sprintf("export %s\n", envVarFormat)
-
 	var flattened string
+	line := fmt.Sprintf("export %s\n", p.config.EnvVarFormat)
 	for _, key := range keys {
 		flattened += fmt.Sprintf(line, key, envVars[key])
 	}
@@ -448,16 +448,12 @@ func (p *Provisioner) createEnvVarFileContent() string {
 func (p *Provisioner) createFlattenedEnvVars() string {
 	keys, envVars := p.escapeEnvVars()
 
-	// Re-assemble vars surrounding value with single quotes and flatten
-	envVarFormat := "%s='%s'"
-	if p.config.EnvVarFormat != "" {
-		envVarFormat = p.config.EnvVarFormat
-	}
-	s := fmt.Sprintf("%s ", envVarFormat)
-
+	// Re-assemble vars into specified format and flatten
 	var flattened string
+	s := fmt.Sprintf("%s ", p.config.EnvVarFormat)
 	for _, key := range keys {
 		flattened += fmt.Sprintf(s, key, envVars[key])
 	}
+
 	return flattened
 }

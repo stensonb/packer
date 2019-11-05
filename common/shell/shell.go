@@ -11,8 +11,6 @@ type Provisioner struct {
 	// converted from Windows to Unix-style.
 	Binary bool
 
-	EnvVarFormat string `mapstructure:"env_var_format"`
-
 	// The command used to execute the script. The '{{ .Path }}' variable
 	// should be used to specify where the script goes, {{ .Vars }}
 	// can be used to inject the environment_vars into the environment.
@@ -41,4 +39,8 @@ type Provisioner struct {
 	// An array of environment variables that will be injected before
 	// your command(s) are executed.
 	Vars []string `mapstructure:"environment_vars"`
+
+	// This is used in the template generation to format environment variables
+	// inside the `ExecuteCommand` template.
+	EnvVarFormat string `mapstructure:"env_var_format"`
 }
